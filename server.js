@@ -1,70 +1,55 @@
-const express = require('express');
-const http = require('http');
-const socketIo = require('socket.io');
+const express = require("express");
+const http = require("http");
+const socketIo = require("socket.io");
+const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-app.use(express.static('public'));
+// Serve static files from the 'public' directory
+app.use(express.static(path.join(__dirname, "public")));
 
-let timerInterval;
-let timeRemaining = 86400; // 24 hours in seconds
-let isRunning = false;
+// Default route
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
-// Start the timer
-const startTimer = () => {
-  if (!isRunning) {
-    isRunning = true;
-    timerInterval = setInterval(() => {
-      if (timeRemaining > 0) {
-        timeRemaining--;
-        io.emit('timerUpdate', formatTime(timeRemaining));
-      } else {
-        clearInterval(timerInterval);
-        isRunning = false;
-        io.emit('timerEnd', '00:00:00');
-      }
-    }, 1000);
-  }
-};
+// Socket.io logic for timer synchronization
+let timer = 0;
+let running = false;
 
-// Stop the timer
-const stopTimer = () => {
-  if (isRunning) {
-    clearInterval(timerInterval);
-    isRunning = false;
-  }
-};
+io.on("connection", (socket) => {
+  socket.emit("updateTimer", { timer, running });
 
-// Reset the timer
-const resetTimer = () => {
-  clearInterval(timerInterval);
-  timeRemaining = 86400; // Reset to 24 hours
-  isRunning = false;
-  io.emit('timerUpdate', formatTime(timeRemaining));
-};
+  socket.on("startTimer", () => {
+    if (!running) {
+      running = true;
+      const interval = setInterval(() => {
+        if (running) {
+          timer++;
+          io.emit("updateTimer", { timer, running });
+        } else {
+          clearInterval(interval);
+        }
+      }, 1000);
+    }
+  });
 
-// Format seconds to HH:MM:SS
-const formatTime = (seconds) => {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const sec = seconds % 60;
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
-};
+  socket.on("stopTimer", () => {
+    running = false;
+    io.emit("updateTimer", { timer, running });
+  });
 
-// Socket event listeners
-io.on('connection', (socket) => {
-  console.log('New client connected');
-  socket.emit('timerUpdate', formatTime(timeRemaining));
-
-  socket.on('startTimer', () => startTimer());
-  socket.on('stopTimer', () => stopTimer());
-  socket.on('resetTimer', () => resetTimer());
-  socket.on('disconnect', () => console.log('Client disconnected'));
+  socket.on("resetTimer", () => {
+    timer = 0;
+    running = false;
+    io.emit("updateTimer", { timer, running });
+  });
 });
 
 // Start the server
-server.listen(3000, () => {
-  console.log('Server running on http://localhost:3000');
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });

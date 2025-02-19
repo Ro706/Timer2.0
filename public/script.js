@@ -1,32 +1,17 @@
-const socket = io();
+const socket = io("http://localhost:5000"); // Change URL if hosted online
+let countdownElement = document.getElementById('countdown');
+let startButton = document.getElementById('startButton');
 
-const timerDisplay = document.getElementById('timer');
-const startButton = document.getElementById('startBtn');
-const stopButton = document.getElementById('stopBtn');
-const resetButton = document.getElementById('resetBtn');
-
-// Handle timer updates from server
-socket.on('timerUpdate', (time) => {
-  timerDisplay.textContent = time;
+startButton.addEventListener("click", () => {
+    socket.emit("start");
+    startButton.disabled = true;
 });
 
-// Handle timer end
-socket.on('timerEnd', () => {
-  timerDisplay.textContent = '00:00:00';
-  alert('Timer has ended');
+socket.on("countdown", (time) => {
+    countdownElement.textContent = time;
 });
 
-// Start timer button click
-startButton.addEventListener('click', () => {
-  socket.emit('startTimer');
-});
-
-// Stop timer button click
-stopButton.addEventListener('click', () => {
-  socket.emit('stopTimer');
-});
-
-// Reset timer button click
-resetButton.addEventListener('click', () => {
-  socket.emit('resetTimer');
+socket.on("timer", ({ hours, minutes, secs }) => {
+    countdownElement.textContent = 
+        `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 });

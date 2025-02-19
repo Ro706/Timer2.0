@@ -1,21 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>24 Hour Countdown Timer</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Timer</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
 </head>
 <body>
-  <div class="container">
-    <h1>24 Hour Countdown Timer</h1>
-    <div id="timer">24:00:00</div>
-    <button id="startBtn">Start</button>
-    <button id="stopBtn">Stop</button>
-    <button id="resetBtn">Reset</button>
-  </div>
-
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="app.js"></script>
+    <div class="container">
+        <!-- <img src="SIT_NGPR_2.png" alt="Logo"> -->
+        <div id="countdown">10</div>
+        <button id="startButton">Start Timer</button>
+    </div>
+    <script src="script.js"></script>
 </body>
 </html>
